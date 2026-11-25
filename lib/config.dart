@@ -1,4 +1,23 @@
-//Konfig 
+// =====================================================================
+//  KONFIGURASI APLIKASI  —  semua yang perlu di-rename ada di file ini
+// =====================================================================
+//
+//  Cara rename cepat:
+//   1. Ubah nilai di bagian "1. IDENTITAS APP" dan "2. KONTAK SUPPORT".
+//   2. Ubah akun GitHub di bagian "3. BACKEND GITHUB".
+//   3. Isi token lewat --dart-define (JANGAN ditulis di file ini), lihat bagian 3.
+//
+//  Yang TIDAK bisa diatur dari sini (ada di luar kode Dart):
+//   - Nama yang tampil di HP / launcher : android/app/src/main/AndroidManifest.xml
+//                                          (android:label="...")
+//   - Package / applicationId           : android/app/build.gradle (namespace & applicationId)
+//                                          + nama folder android/app/src/main/kotlin/...
+//                                          + baris `package` di MainActivity.kt & CikoApplication.kt
+//   - Nama project pubspec              : pubspec.yaml (name & description)
+//   - Logo & ikon launcher              : assets/images/logo_ciko.jpg
+//                                          + android/app/src/main/res/mipmap-* & drawable-nodpi
+//   - Keystore penandatangan APK        : ciko-release.jks (alias, password di android/app/build.gradle)
+
 class AppConfig {
   AppConfig._();
 
