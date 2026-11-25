@@ -1,0 +1,69 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+    id 'dev.flutter.flutter-gradle-plugin'
+}
+
+android {
+    namespace 'com.ciko.build'
+    compileSdk flutter.compileSdkVersion
+    ndkVersion flutter.ndkVersion
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+        coreLibraryDesugaringEnabled true
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+
+    defaultConfig {
+        applicationId 'com.ciko.build'
+        minSdk 23
+        targetSdk flutter.targetSdkVersion
+        versionCode flutter.versionCode
+        versionName flutter.versionName
+
+        // ABI dipisah lewat `flutter build apk --split-per-abi` (abiFilters bentrok dengan split).
+    }
+
+    signingConfigs {
+        release {
+            def ksPath = System.getenv('KEYSTORE_FILE') ?: "${rootProject.projectDir.parentFile}/ciko-release.jks"
+            def ks = file(ksPath)
+            if (ks.exists()) {
+                storeFile ks
+                storePassword System.getenv('KEYSTORE_PASSWORD') ?: '5890fe661f3977ae'
+                keyAlias System.getenv('KEY_ALIAS') ?: 'ciko'
+                keyPassword System.getenv('KEY_PASSWORD') ?: '5890fe661f3977ae'
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            // Penyusutan resource dimatikan: ikon notifikasi dirujuk lewat nama (string), mudah terbuang
+            // dan membuat notifikasi/foreground service crash. Selisih ukuran sangat kecil.
+            shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release.storeFile != null
+                ? signingConfigs.release
+                : signingConfigs.debug
+        }
+        debug {
+            signingConfig signingConfigs.debug
+        }
+    }
+
+}
+
+flutter {
+    source '../..'
+}
+
+dependencies {
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'
+}

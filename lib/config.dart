@@ -1,0 +1,103 @@
+//Konfligurasi Aplikasi Mamen
+class AppConfig {
+  AppConfig._();
+
+  // -------------------------------------------------------------------
+  // 1. IDENTITAS APP
+  // -------------------------------------------------------------------
+
+  /// Nama app yang tampil di splash, login, beranda, notifikasi, dan pesan-pesan di dalam app.
+  static const String appName = 'CIKO BUILD';
+
+  /// Nama folder hasil build di Download HP dan di Google Drive.
+  /// (Download/<folderName>/nama.apk).
+  static const String folderName = 'CikoBuild';
+
+  // -------------------------------------------------------------------
+  // 2. KONTAK SUPPORT  (kartu "Tim Support" di tab Pengaturan)
+  // -------------------------------------------------------------------
+  // Isi cukup username / nomor, tidak perlu link lengkap.
+
+  /// Nama yang tampil di kartu Tim Support.
+  static const String supportName = 'CIKO';
+
+  /// Username GitHub (tanpa @).
+  static const String supportGithub = 'cikobug';
+
+  /// Username Telegram (tanpa @).
+  static const String supportTelegram = 'cikobug';
+
+  /// Nomor WhatsApp, format internasional tanpa + atau spasi (62 = Indonesia).
+  static const String supportWhatsapp = '6281226749903';
+
+  /// Link siap pakai untuk ikon kontak. Jangan diubah, ikut nilai di atas.
+  static const String supportGithubUrl = 'github.com/$supportGithub';
+  static const String supportTelegramUrl = 't.me/$supportTelegram';
+  static const String supportWhatsappUrl = 'wa.me/$supportWhatsapp';
+
+  // -------------------------------------------------------------------
+  // 3. BACKEND GITHUB
+  // -------------------------------------------------------------------
+  // Semua build berjalan di GitHub Actions milik akun di bawah ini.
+  //
+  // TOKEN: dipakai semua pengguna app, jadi buat token fine-grained yang HANYA punya
+  // akses ke repo data di bawah (Contents + Actions: read/write), bukan token akun utama.
+  // Token yang ditanam di APK bisa diekstrak siapa saja, jadi jangan tulis di sini dan
+  // jangan commit. Masukkan saat build:
+  //
+  //   flutter build apk --dart-define=GITHUB_TOKEN=ghp_xxx
+  //
+  // (opsional: --dart-define=REPO_OWNER=akun --dart-define=REPO_NAME=repo)
+
+  /// Token GitHub. Dibaca dari --dart-define=GITHUB_TOKEN, sengaja dikosongkan di kode.
+  static const String githubToken = String.fromEnvironment('GITHUB_TOKEN', defaultValue: '');
+
+  /// Akun GitHub (username / organisasi) pemilik repo backend.
+  static const String repoOwner = String.fromEnvironment('REPO_OWNER', defaultValue: 'cikobug');
+
+  /// Repo tempat semua build berjalan + menyimpan ZIP project dan data pengguna.
+  /// Dibuat otomatis oleh app bila belum ada. Sebaiknya privat.
+  static const String repoName = String.fromEnvironment('REPO_NAME', defaultValue: 'ciko-build-data');
+  static const bool repoPrivate = true;
+
+  /// File data pengguna di dalam repo (nama + credit + tanggal check-in terakhir).
+  static const String usersFile = 'user.json';
+
+  // -------------------------------------------------------------------
+  // 4. UPDATE APP
+  // -------------------------------------------------------------------
+  // App mengecek https://raw.githubusercontent.com/<owner>/<repo>/<branch>/latest.json
+  // Repo ini harus PUBLIK dan dibuat manual.
+
+  static const String updateRepoOwner = repoOwner;
+  static const String updateRepoName = 'ciko-build-update';
+  static const String updateBranch = 'main';
+
+  // -------------------------------------------------------------------
+  // 5. CREDIT
+  // -------------------------------------------------------------------
+
+  /// Credit awal pengguna baru.
+  static const int startCredits = 5;
+
+  /// Credit gratis tiap check-in harian.
+  static const int dailyCheckInCredits = 1;
+
+  /// Credit yang terpakai untuk satu kali build.
+  static const int buildCost = 1;
+
+  // -------------------------------------------------------------------
+  // 6. LOGIN GOOGLE (opsional)
+  // -------------------------------------------------------------------
+
+  /// Web client ID OAuth Google untuk google_sign_in. Kosongkan bila tidak dipakai.
+  /// Isi lewat --dart-define=GOOGLE_SERVER_CLIENT_ID=xxx
+  static const String googleServerClientId =
+      String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID', defaultValue: '');
+
+  // -------------------------------------------------------------------
+
+  /// True bila token & owner sudah terisi (login akan ditolak kalau false).
+  static bool get isConfigured =>
+      !githubToken.startsWith('ISI_') && !repoOwner.startsWith('ISI_') && githubToken.isNotEmpty;
+}
