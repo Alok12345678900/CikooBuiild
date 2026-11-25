@@ -1,4 +1,4 @@
-//Konfligurasi Aplikasi Mamen
+//Konfig 
 class AppConfig {
   AppConfig._();
 

@@ -1,17 +1,29 @@
 name: CIKO BUILD APK
 
 on:
+  # Otomatis jalan tiap ada upload / commit ke repo (tidak perlu tekan Run workflow).
+  push:
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+  # Tetap bisa dijalankan manual dari tab Actions.
   workflow_dispatch:
     inputs:
       source_zip:
-        description: "Nama ZIP project yang diupload dari aplikasi"
+        description: "Nama ZIP project (kosongkan = otomatis deteksi)"
         required: false
-        default: "source.zip"
+        default: ""
         type: string
 
 permissions:
   contents: read
   actions: read
+
+# Upload lewat web GitHub sering jadi beberapa commit berurutan:
+# build yang lama dibatalkan, hanya commit terakhir (file sudah lengkap) yang dibangun.
+concurrency:
+  group: ciko-build-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -22,24 +34,45 @@ jobs:
       - name: Checkout workflow repository
         uses: actions/checkout@v4
 
-      - name: Extract uploaded project ZIP
+      - name: Tunggu upload selesai
+        run: sleep 20
+
+      - name: Detect project source
         shell: bash
         run: |
+          # Urutan: input manual -> source.zip -> project.zip -> ZIP pertama di root -> repo ini sendiri.
           ZIP_NAME="${{ inputs.source_zip }}"
-          test -f "$ZIP_NAME" || { echo "::error::File $ZIP_NAME tidak ditemukan. Upload ZIP project dari aplikasi."; exit 1; }
-          mkdir -p _ciko_source
-          unzip -q "$ZIP_NAME" -d _ciko_source
-          PROJECT_ROOT="$(find _ciko_source -name pubspec.yaml -printf '%h\n' | head -n 1)"
+          if [ -z "$ZIP_NAME" ]; then
+            for c in source.zip project.zip; do
+              [ -f "$c" ] && ZIP_NAME="$c" && break
+            done
+          fi
+          if [ -z "$ZIP_NAME" ]; then
+            ZIP_NAME="$(find . -maxdepth 1 -type f -iname '*.zip' -printf '%f\n' | sort | head -n 1)"
+          fi
+
+          if [ -n "$ZIP_NAME" ]; then
+            test -f "$ZIP_NAME" || { echo "::error::File $ZIP_NAME tidak ditemukan di repo."; exit 1; }
+            echo "Sumber: ZIP $ZIP_NAME"
+            mkdir -p _ciko_source
+            unzip -q "$ZIP_NAME" -d _ciko_source
+            SEARCH_DIR="_ciko_source"
+          else
+            echo "Sumber: isi repo ini langsung (tidak ada ZIP)"
+            SEARCH_DIR="."
+          fi
+
+          PROJECT_ROOT="$(find "$SEARCH_DIR" -maxdepth 4 -name pubspec.yaml -not -path '*/.*/*' -not -path '*/_ciko_source/_ciko_source/*' -printf '%h\n' | awk '{print length, $0}' | sort -n | head -n 1 | cut -d' ' -f2-)"
           if [ -z "$PROJECT_ROOT" ]; then
-            PROJECT_ROOT="$(find _ciko_source -name gradlew -printf '%h\n' | head -n 1)"
+            PROJECT_ROOT="$(find "$SEARCH_DIR" -maxdepth 4 -name gradlew -not -path '*/.*/*' -printf '%h\n' | awk '{print length, $0}' | sort -n | head -n 1 | cut -d' ' -f2-)"
           fi
           if [ -z "$PROJECT_ROOT" ]; then
-            echo "::error::ZIP tidak berisi pubspec.yaml atau gradlew"
-            find _ciko_source -maxdepth 3 -type f | head -100
+            echo "::error::Tidak ada project (pubspec.yaml / gradlew) di repo ataupun di dalam ZIP. Upload semua file project dulu."
+            find "$SEARCH_DIR" -maxdepth 3 -type f -not -path './.git/*' | head -100
             exit 1
           fi
           echo "PROJECT_ROOT=$PROJECT_ROOT" >> "$GITHUB_ENV"
-          echo "Sumber project ditemukan: $PROJECT_ROOT"
+          echo "Project ditemukan: $PROJECT_ROOT"
 
       - name: Detect project type and install Java
         uses: actions/setup-java@v4
@@ -56,8 +89,12 @@ jobs:
       - name: Copy project into workspace
         shell: bash
         run: |
-          cp -a "$PROJECT_ROOT"/. .
-          echo "Files copied from uploaded ZIP"
+          if [ "$PROJECT_ROOT" != "." ]; then
+            cp -a "$PROJECT_ROOT"/. .
+            echo "Project disalin ke workspace"
+          else
+            echo "Project sudah ada di root repo"
+          fi
 
       - name: Build Flutter APK
         if: hashFiles('pubspec.yaml') != ''
