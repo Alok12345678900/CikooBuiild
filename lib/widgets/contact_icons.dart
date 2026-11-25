@@ -28,7 +28,7 @@ class ContactIcons extends StatelessWidget {
       ..showSnackBar(const SnackBar(content: Text('Tidak bisa membuka tautan')));
   }
 
-  Widget _btn(BuildContext context, IconData icon, Color color, String tip, String value) {
+  Widget _btn(BuildContext context, FaIconData icon, Color color, String tip, String value) {
     return Tooltip(
       message: tip,
       child: InkResponse(
