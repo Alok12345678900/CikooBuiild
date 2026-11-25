@@ -15,7 +15,7 @@ const Set<String> _textExt = {
 const Set<String> _domainExt = {
   ..._textExt,
   'css', 'scss', 'tsx', 'jsx', 'mjs', 'cjs', 'php', 'env', 'ini', 'conf', 'svg', 'vue',
-  'swift', 'm', 'h', 'cpp', 'c', 'csv', 'rc', 'sh', 'bat', 'gradle', 'htm', 'jsp', 'py', 'rb', 'go',
+  'swift', 'm', 'h', 'cpp', 'c', 'csv', 'rc', 'sh', 'bat', 'htm', 'jsp', 'py', 'rb', 'go',
 };
 
 bool _isTextForDomain(String p) {

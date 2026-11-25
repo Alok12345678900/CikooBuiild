@@ -10,6 +10,27 @@ rootProject.buildDir = '../build'
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
 }
+// Plugin lama (mis. file_picker) masih compileSdk 34, padahal dependency AndroidX terbaru
+// minta compileSdk 36+. Naikkan otomatis untuk semua library plugin.
+subprojects {
+    def bumpCompileSdk = { Project p ->
+        if (p.plugins.hasPlugin('com.android.library')) {
+            try {
+                def cur = p.android.compileSdk
+                if (cur == null || cur < 36) {
+                    p.android.compileSdk = 36
+                }
+            } catch (Throwable e) {
+                p.logger.warn("compileSdk override dilewati untuk ${p.name}: ${e.message}")
+            }
+        }
+    }
+    if (project.state.executed) {
+        bumpCompileSdk(project)
+    } else {
+        project.afterEvaluate { bumpCompileSdk(project) }
+    }
+}
 subprojects {
     project.evaluationDependsOn(':app')
 }
